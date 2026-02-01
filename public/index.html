@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>基金实时估值</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#409eff" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 12px;
+            font-family: system-ui, -apple-system;
+            background: #f5f6f7;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .tips {
+            color: red;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+
+        .control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .control input,
+        .control button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        .control input {
+            border: 1px solid #ccc;
+        }
+
+        .control button {
+            background: #409eff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        #sortBtn {
+            background: #67c23a;
+        }
+
+        #list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .08);
+        }
+
+        .card h3 {
+            margin: 0 0 6px;
+            font-size: 16px;
+        }
+
+        .up {
+            color: red;
+            font-weight: bold;
+        }
+
+        .down {
+            color: green;
+            font-weight: bold;
+        }
+
+        .time {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .delete {
+            margin-top: 6px;
+            background: #f56c6c;
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .mini-chart {
+            width: 100%;
+            height: 60px;
+            margin-top: 6px;
+        }
+
+        .chart-wrap {
+            margin-top: 16px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+            height: 260px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 20px 40px;
+            }
+
+            .control {
+                flex-direction: row;
+            }
+
+            #list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .chart-wrap {
+                height: 360px;
+            }
+        }
+               /* ⭐ 待添加功能区 ⭐ */
+        .todo-wrap {
+            margin-top: 24px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px dashed #ddd;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        .todo-list li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .todo-tip {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📈 基金实时估值<span class="tips">盘中为估算，仅供参考</span></h1>
+
+    <div class="control">
+        <input id="codeInput" placeholder="输入基金代码" />
+        <button id="addBtn">添加</button>
+        <button id="sortBtn">按涨跌排序</button>
+    </div>
+
+    <div id="list"></div>
+
+    <h2>📊 历史走势</h2>
+    <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+    </div>
+
+    <!-- ⭐ 待添加功能区域 -->
+    <div class="todo-wrap">
+        <h2>🧩 待添加功能</h2>
+        <ul class="todo-list">
+            <li>📈 实时价格走势图</li>
+            <li>💰 设置基金持仓金额</li>
+            <li>🗂️ 添加分组</li>
+        </ul>
+        <div class="todo-tip">🚧 敬请期待，功能正在开发中…</div>
+    </div>
+
+    <script src="./main.js"></script>
+</body>
+
+</html>
