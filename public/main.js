@@ -88,7 +88,8 @@ function renderCard(fund) {
     <button class="delete">删除</button>
   `;
 
-  div.querySelector(".delete").onclick = () => {
+  div.querySelector(".delete").onclick = (e) => {
+    e.stopPropagation();
     FUND_CODES = FUND_CODES.filter((c) => c !== fund.fundcode);
     saveCodes();
     loadAll();
@@ -103,23 +104,28 @@ async function loadAll() {
   const list = document.getElementById("list");
   list.innerHTML = "加载中...";
 
-  const results = await Promise.all(FUND_CODES.map((code) => fetchFund(code)));
+  const results = await Promise.allSettled(FUND_CODES.map((code) => fetchFund(code)));
 
   if (sortMode !== "none") {
-    results.sort((a, b) =>
-      sortMode === "asc" ? a.gszzl - b.gszzl : b.gszzl - a.gszzl,
-    );
+    results.sort((a, b) => {
+      if (a.status !== "fulfilled" || b.status !== "fulfilled") return 0;
+      return sortMode === "asc"
+        ? a.value.gszzl - b.value.gszzl
+        : b.value.gszzl - a.value.gszzl;
+    });
   }
 
   list.innerHTML = "";
 
-  results.forEach((fund) => {
+  results.forEach((result, i) => {
+    if (result.status !== "fulfilled" || result.value.error) return;
+    const fund = result.value;
     recordMinute(fund.fundcode, parseFloat(fund.gsz));
     const card = renderCard(fund);
     list.appendChild(card);
 
     safeCreateChart(`.mini-chart[data-code="${fund.fundcode}"]`, () => {
-      return renderMiniChart(fund.fundcode)
+      return renderMiniChart(fund.fundcode);
     });
   });
 }
@@ -127,13 +133,22 @@ async function loadAll() {
 let historyChart = null;
 
 async function drawHistory(code, name) {
-  const res = await fetch(`/api/history/${code}`);
-  const history = await res.json();
+  try {
+    const res = await fetch(`/api/history/${code}`);
+    const history = await res.json();
 
-  const labels = history.map((i) => i.time);
-  const values = history.map((i) => i.value);
+    if (!Array.isArray(history) || history.length === 0) {
+      alert("暂无历史数据");
+      return;
+    }
 
-  renderHistorySafe(labels, values, name);
+    const labels = history.map((i) => i.time);
+    const values = history.map((i) => i.value);
+
+    renderHistorySafe(labels, values, name);
+  } catch (e) {
+    alert("历史数据加载失败，请稍后重试");
+  }
 }
 
 function renderHistorySafe(labels, values, name) {
@@ -172,8 +187,8 @@ function renderHistorySafe(labels, values, name) {
   }, 300);
 }
 
-function safeCreateChart(canvasId, createFn) {
-  const canvas = document.getElementById(canvasId);
+function safeCreateChart(canvasSelector, createFn) {
+  const canvas = document.querySelector(canvasSelector);
   if (!canvas) return;
 
   const wrap = canvas.parentElement;
@@ -182,9 +197,11 @@ function safeCreateChart(canvasId, createFn) {
     const chart = createFn();
 
     // 再保险一次
-    setTimeout(() => {
-      chart.resize();
-    }, 200);
+    if (chart) {
+      setTimeout(() => {
+        chart.resize();
+      }, 200);
+    }
   });
 }
 
@@ -216,7 +233,11 @@ document.getElementById("addBtn").onclick = async () => {
   }
 
   try {
-    await fetchFund(code);
+    const data = await fetchFund(code);
+    if (data.error) {
+      alert("基金不存在或代码无效");
+      return;
+    }
     FUND_CODES.push(code);
     saveCodes();
     input.value = "";
