@@ -10,56 +10,149 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#409eff" />
+    <meta name="theme-color" content="#4f7fff" />
 
     <style>
-        body {
-            margin: 0;
-            padding: 12px;
-            font-family: system-ui, -apple-system;
-            background: #f5f6f7;
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --primary: #4f7fff;
+            --primary-dark: #3a6be0;
+            --success: #18c167;
+            --danger: #ff4d4f;
+            --danger-light: #fff1f0;
+            --up: #ff4d4f;
+            --down: #18c167;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #1a1a2e;
+            --text-sub: #8c8c9a;
+            --border: #e8e8f0;
+            --shadow: 0 2px 12px rgba(79,127,255,.08);
+            --radius: 14px;
         }
 
-        h1 {
-            font-size: 20px;
-            margin-bottom: 12px;
+        body {
+            margin: 0 auto;
+            padding: 16px 12px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            max-width: 640px;
+        }
+
+        /* ── 顶部标题栏 ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            gap: 8px;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .tips {
-            color: red;
-            font-size: 12px;
-            margin-left: 6px;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-sub);
+            background: #fff7e6;
+            border: 1px solid #ffe7ba;
+            padding: 2px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
         }
 
+        .refresh-hint {
+            font-size: 12px;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+
+        /* ── 输入控制区 ── */
         .control {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
-        .control input,
-        .control button {
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: none;
+        .control-row {
+            display: flex;
+            gap: 8px;
         }
 
         .control input {
-            border: 1px solid #ccc;
+            flex: 1;
+            padding: 11px 14px;
+            font-size: 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            min-width: 0;
         }
 
-        .control button {
-            background: #409eff;
-            color: #fff;
+        .control input:focus {
+            border-color: var(--primary);
+        }
+
+        .control input::placeholder {
+            color: #bbb;
+        }
+
+        .btn {
+            padding: 11px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
             cursor: pointer;
+            transition: background .2s, transform .1s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        #sortBtn {
-            background: #67c23a;
+        .btn:active { transform: scale(.96); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
         }
 
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .btn-sort {
+            flex: 1;
+            background: #eef4ff;
+            color: var(--primary);
+            border: 1.5px solid #d0e1ff;
+        }
+
+        .btn-sort:hover { background: #ddeaff; }
+
+        .btn-manage-group {
+            flex: 1;
+            background: #f5f0ff;
+            color: #7c3aed;
+            border: 1.5px solid #ddd6fe;
+        }
+
+        .btn-manage-group:hover { background: #ede9fe; }
+
+        /* ── 基金卡片列表 ── */
         #list {
             display: flex;
             flex-direction: column;
@@ -67,60 +160,444 @@
         }
 
         .card {
-            background: #fff;
-            padding: 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, .08);
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: box-shadow .2s, transform .15s;
+            border: 1.5px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
 
-        .card h3 {
-            margin: 0 0 6px;
-            font-size: 16px;
+        .card:hover {
+            box-shadow: 0 6px 24px rgba(79,127,255,.14);
+            transform: translateY(-2px);
+            border-color: #d0e1ff;
         }
 
-        .up {
-            color: red;
-            font-weight: bold;
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
         }
 
-        .down {
-            color: green;
-            font-weight: bold;
+        .card-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+            flex: 1;
+            padding-right: 8px;
         }
 
-        .time {
-            font-size: 12px;
-            color: #888;
+        .card-rate {
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .card-rate.up  { color: var(--up); }
+        .card-rate.down { color: var(--down); }
+
+        .card-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .card-time {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .delete {
-            margin-top: 6px;
-            background: #f56c6c;
-            color: #fff;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid #ffa39e;
+            padding: 5px 9px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background .15s;
+        }
+
+        .delete:hover { background: #ffe0de; }
+
+        /* ── 持仓设置按钮 ── */
+        .btn-position {
+            background: #f0f5ff;
+            color: var(--primary);
+            border: 1px solid #d0e1ff;
+            padding: 5px 9px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background .15s;
+        }
+
+        .btn-position:hover { background: #ddeaff; }
+
+        /* ── 持仓信息展示 ── */
+        .card-position {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8faff;
+            border-radius: 8px;
+            border: 1px solid #e8eeff;
+        }
+
+        .pos-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            padding: 4px 6px;
+            background: #fff;
+            border-radius: 6px;
+        }
+
+        .pos-label {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        .pos-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .pos-val.up  { color: var(--up); }
+        .pos-val.down { color: var(--down); }
+
+        /* ── 弹窗（移动端底部滑出）── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 100;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 20px 20px 0 0;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+            width: 100%;
+            max-width: 100%;
+            box-shadow: 0 -8px 40px rgba(0,0,0,.15);
+            animation: slideUp .25s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+
+        /* 弹窗顶部拖拽指示条 */
+        .modal::before {
+            content: '';
+            display: block;
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 16px;
+        }
+
+        .modal-field {
+            margin-bottom: 14px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .modal-field input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color .2s;
+            color: var(--text);
+        }
+
+        .modal-field input:focus { border-color: var(--primary); }
+
+        .modal-hint {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin: -6px 0 16px;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .modal-footer .btn-clear {
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .modal-footer .btn-clear:hover { background: var(--bg); }
+
+        .modal-footer .btn-cancel {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .modal-footer .btn-save {
+            flex: 2;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .modal-footer .btn-save:hover { background: var(--primary-dark); }
+
+        /* ── 分组相关样式 ── */
+        .btn-group {
+            background: #f5f0ff;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background .15s;
+            white-space: nowrap;
+        }
+
+        .btn-group:hover { background: #ede9fe; }
+
+        .group-section { margin-bottom: 8px; }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+
+        .group-tag {
+            font-size: 13px;
+            font-weight: 600;
+            color: #7c3aed;
+            background: #f5f0ff;
+            border: 1px solid #ddd6fe;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .group-tag-default {
+            color: var(--text-sub);
+            background: var(--bg);
+            border-color: var(--border);
+        }
+
+        .group-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        /* 分组选择弹窗 */
+        .group-pick-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .15s;
+            border: 1.5px solid transparent;
+            list-style: none;
+        }
+
+        .group-pick-item:hover { background: var(--bg); }
+
+        .group-pick-item.active {
+            background: #f5f0ff;
+            border-color: #ddd6fe;
+        }
+
+        .group-pick-name { font-size: 14px; font-weight: 500; }
+        .group-pick-check { color: #7c3aed; font-weight: 700; }
+        .group-pick-empty { font-size: 13px; color: var(--text-sub); text-align: center; padding: 16px 0; margin: 0; }
+
+        #groupPickerList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+
+        /* 分组管理弹窗 */
+        .group-manager-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: var(--bg);
+            list-style: none;
+        }
+
+        .group-manager-name { flex: 1; font-size: 14px; font-weight: 500; }
+        .group-manager-count { font-size: 12px; color: var(--text-sub); }
+
+        .group-manager-del {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid #ffa39e;
+            padding: 4px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .group-manager-del:hover { background: #ffe0de; }
+
+        #groupManagerList { list-style: none; padding: 0; margin: 12px 0; display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+
+        .group-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .group-add-row input {
+            flex: 1;
+            padding: 9px 12px;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color .2s;
+            color: var(--text);
+        }
+
+        .group-add-row input:focus { border-color: #7c3aed; }
+
+        .group-add-row .btn-add-group {
+            padding: 9px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            background: #7c3aed;
+            color: #fff;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .group-add-row .btn-add-group:hover { background: #6d28d9; }
+
+        /* ── 迷你走势图 ── */
+        .mini-chart-wrap {
+            width: 100%;
+            height: 52px;
+            margin-top: 10px;
         }
 
         .mini-chart {
             width: 100%;
-            height: 60px;
-            margin-top: 6px;
+            height: 52px;
             display: block;
         }
 
-        .mini-chart-wrap {
-            width: 100%;
-            height: 60px;
-            margin-top: 6px;
+        /* ── 区块标题 ── */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 24px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
         }
 
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            margin-left: 6px;
+        }
+
+        /* ── 历史图表区 ── */
         .chart-wrap {
-            margin-top: 16px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 12px;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             height: 260px;
         }
 
@@ -129,83 +606,183 @@
             height: 100% !important;
         }
 
-        @media (min-width: 768px) {
-            body {
-                padding: 20px 40px;
-            }
-
-            .control {
-                flex-direction: row;
-            }
-
-            #list {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 20px;
-            }
-
-            .chart-wrap {
-                height: 360px;
-            }
-        }
-               /* ⭐ 待添加功能区 ⭐ */
+        /* ── 待开发功能区 ── */
         .todo-wrap {
             margin-top: 24px;
-            background: #fff;
-            border-radius: 12px;
-            padding: 14px;
-            border: 1px dashed #ddd;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 1.5px dashed var(--border);
+        }
+
+        .todo-wrap .section-title {
+            margin-top: 0;
         }
 
         .todo-list {
             list-style: none;
             padding: 0;
-            margin: 10px 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .todo-list li {
-            padding: 8px 0;
-            font-size: 14px;
-            color: #555;
+            padding: 9px 10px;
+            font-size: 13px;
+            color: var(--text-sub);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            border-radius: 8px;
+            transition: background .15s;
         }
 
+        .todo-list li:hover { background: var(--bg); }
+
         .todo-tip {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 12px;
-            color: #999;
+            color: #c0c0cc;
             text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── 响应式 ── */
+        @media (min-width: 600px) {
+            body { padding: 24px 32px 60px; max-width: 1400px; }
+
+            .header-title { font-size: 20px; }
+
+            .control { flex-direction: row; }
+            .control-row { flex: 1; }
+            .control input { max-width: 260px; }
+            .btn-sort, .btn-manage-group { flex: none; }
+
+            #list { gap: 20px; }
+
+            .group-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 16px;
+            }
+
+            .chart-wrap { height: 360px; }
+
+            .card-position {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .pos-item {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* 桌面端弹窗居中 */
+            .modal-overlay {
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .modal {
+                border-radius: 16px;
+                max-width: 400px;
+                padding: 24px;
+                animation: modalIn .2s ease;
+            }
+
+            .modal::before { display: none; }
+
+            @keyframes modalIn {
+                from { opacity: 0; transform: translateY(12px) scale(.97); }
+                to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>📈 基金实时估值<span class="tips">盘中为估算，仅供参考</span></h1>
+    <div class="header">
+        <h1 class="header-title">
+            📈 基金实时估值
+            <span class="tips">盘中估算，仅供参考</span>
+        </h1>
+        <span class="refresh-hint">60s 自动刷新</span>
+    </div>
 
     <div class="control">
-        <input id="codeInput" placeholder="输入基金代码" />
-        <button id="addBtn">添加</button>
-        <button id="sortBtn">按涨跌排序</button>
+        <div class="control-row">
+            <input id="codeInput" placeholder="输入 6 位基金代码" />
+            <button id="addBtn" class="btn btn-primary">添加</button>
+        </div>
+        <div class="control-row">
+            <button id="sortBtn" class="btn btn-sort">按涨跌排序</button>
+            <button id="manageGroupBtn" class="btn btn-manage-group">管理分组</button>
+        </div>
     </div>
 
     <div id="list"></div>
 
-    <h2>📊 历史走势</h2>
+    <div class="section-title">📊 历史走势</div>
     <div class="chart-wrap">
         <canvas id="chart"></canvas>
     </div>
 
-    <!-- ⭐ 待添加功能区域 -->
     <div class="todo-wrap">
-        <h2>🧩 待添加功能</h2>
+        <div class="section-title">🧩 待添加功能</div>
         <ul class="todo-list">
-            <li>📈 实时价格走势图</li>
-            <li>💰 设置基金持仓金额</li>
-            <li>🗂️ 添加分组</li>
+            <li>🚀 更多功能敬请期待…</li>
         </ul>
-        <div class="todo-tip">🚧 敬请期待，功能正在开发中…</div>
+    </div>
+
+    <!-- 持仓设置弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="positionModal">
+            <div class="modal-title" id="modalTitle">设置持仓</div>
+            <div class="modal-field">
+                <label>持有份额（份）</label>
+                <input id="modalShares" type="number" min="0" step="0.01" placeholder="例如：1000.00" />
+            </div>
+            <div class="modal-field">
+                <label>持仓成本（元）</label>
+                <input id="modalCost" type="number" min="0" step="0.01" placeholder="例如：5000.00" />
+            </div>
+            <p class="modal-hint">填写持有份额和总成本，系统将自动计算当前市值和盈亏情况。</p>
+            <div class="modal-footer">
+                <button class="btn-clear" id="modalClear">清除</button>
+                <button class="btn-cancel" id="modalCancel">取消</button>
+                <button class="btn-save" id="modalSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分组选择弹窗 -->
+    <div class="modal-overlay" id="groupPickerOverlay">
+        <div class="modal" id="groupPickerModal">
+            <div class="modal-title" id="groupPickerTitle">选择分组</div>
+            <ul id="groupPickerList"></ul>
+            <div class="modal-footer" style="margin-top:12px;">
+                <button class="btn-cancel" id="groupPickerCancel" style="flex:1;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分组管理弹窗 -->
+    <div class="modal-overlay" id="groupManagerOverlay">
+        <div class="modal" id="groupManagerModal" style="max-width:400px;">
+            <div class="modal-title">管理分组</div>
+            <ul id="groupManagerList"></ul>
+            <div class="group-add-row">
+                <input id="groupManagerInput" placeholder="输入新分组名称" />
+                <button class="btn-add-group" id="groupManagerAdd">新建</button>
+            </div>
+            <div class="modal-footer" style="margin-top:12px;">
+                <button class="btn-cancel" id="groupManagerClose" style="flex:1;">关闭</button>
+            </div>
+        </div>
     </div>
 
     <script src="./main.js"></script>

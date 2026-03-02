@@ -1,11 +1,20 @@
 // fund.js
 const https = require("https");
 
+const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
 function getFund(code) {
   return new Promise((resolve, reject) => {
     const url = `https://fundgz.1234567.com.cn/js/${code}.js`;
 
-    https.get(url, res => {
+    const options = {
+      headers: {
+        "User-Agent": UA,
+        "Referer": "https://fund.eastmoney.com/",
+      }
+    };
+
+    https.get(url, options, res => {
       let raw = "";
 
       res.on("data", chunk => raw += chunk);
